@@ -1,19 +1,10 @@
 import '@phosphor-icons/web/regular'
 import './style.css'
+import { calculateAnniversaryState } from './anniversary.js'
 
 const base = import.meta.env.BASE_URL
 const app = document.querySelector('#app')
 const imageUrl = (path) => `${base}${path}`
-
-const calculateDays = () => {
-  const start = new Date('2025-07-15T00:00:00+08:00')
-  const anniversary = new Date('2026-07-15T00:00:00+08:00')
-  const now = new Date()
-  return {
-    together: Math.max(0, Math.floor((now - start) / 86400000) + 1),
-    remaining: Math.ceil((anniversary - now) / 86400000),
-  }
-}
 
 const photoButton = (photo, memoryIndex, photoIndex, className = '') => `
   <button class="memory-photo ${className}" data-memory="${memoryIndex}" data-photo="${photoIndex}" aria-label="查看${photo.alt}">
@@ -45,7 +36,7 @@ async function init() {
     if (!response.ok) throw new Error('无法读取回忆数据')
     return response.json()
   })
-  const { together, remaining } = calculateDays()
+  const anniversary = calculateAnniversaryState()
   const totalPhotos = memories.reduce((sum, memory) => sum + memory.photos.length, 0)
   const hero = memories[6].photos[0]
   const quietMoment = memories[3].photos[1] || memories[3].photos[0]
@@ -70,7 +61,7 @@ async function init() {
         <p class="hero__lead reveal">日子一直向前，而我把爱留在每一个与你有关的瞬间。</p>
       </div>
       <div class="hero__days reveal" aria-label="相爱的天数">
-        <strong>${together}</strong><span>天<br />仍在继续</span>
+        <strong id="together-days">${anniversary.together}</strong><span>天<br />仍在继续</span>
       </div>
     </header>
 
@@ -147,7 +138,7 @@ async function init() {
         <i class="ph ph-heart finale__heart observe" aria-hidden="true"></i>
         <p class="finale__names observe">森林 <span>×</span> 鲜艳</p>
         <p class="finale__date observe">2025.07.15 至 FOREVER</p>
-        ${remaining > 0 ? `<p class="finale__countdown observe">距离一周年还有 ${remaining} 天</p>` : ''}
+        <p class="finale__countdown observe" id="anniversary-message" aria-live="polite">${anniversary.message}</p>
       </section>
     </main>
 
@@ -162,6 +153,19 @@ async function init() {
   setupObservers()
   setupLightbox(memories)
   setupMusicPlayer()
+  setupAnniversaryClock()
+}
+
+function setupAnniversaryClock() {
+  const days = document.querySelector('#together-days')
+  const message = document.querySelector('#anniversary-message')
+  const refresh = () => {
+    const state = calculateAnniversaryState()
+    days.textContent = state.together
+    message.textContent = state.message
+  }
+  refresh()
+  window.setInterval(refresh, 60000)
 }
 
 function musicPlayerTemplate() {

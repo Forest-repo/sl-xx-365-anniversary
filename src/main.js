@@ -10,6 +10,10 @@ const icon = (name) => {
     close: '<path d="M18 6 6 18M6 6l12 12"/>',
     prev: '<path d="m15 18-6-6 6-6"/>',
     next: '<path d="m9 18 6-6-6-6"/>',
+    play: '<path d="m8 5 11 7-11 7Z"/>',
+    pause: '<path d="M9 5v14M15 5v14"/>',
+    volume: '<path d="M11 5 6 9H3v6h3l5 4Zm4.5 3.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12"/>',
+    muted: '<path d="M11 5 6 9H3v6h3l5 4Zm5 5 5 5m0-5-5 5"/>',
   }
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`
 }
@@ -32,6 +36,21 @@ async function init() {
 
   app.innerHTML = `
     <div class="noise"></div>
+    <audio id="love-song" src="${base}music/perfect.mp3" preload="auto" autoplay loop></audio>
+    <aside class="music-player" aria-label="背景音乐播放器">
+      <div class="music-player__disc" aria-hidden="true"><span>S × X</span></div>
+      <div class="music-player__body">
+        <div class="music-player__meta">
+          <span class="music-player__status">正在尝试播放</span>
+          <strong>Perfect</strong><small>Ed Sheeran</small>
+        </div>
+        <div class="music-player__controls">
+          <button class="music-player__toggle" aria-label="播放音乐">${icon('play')}</button>
+          <input class="music-player__progress" type="range" min="0" max="100" value="0" aria-label="音乐播放进度" />
+          <button class="music-player__mute" aria-label="静音">${icon('volume')}</button>
+        </div>
+      </div>
+    </aside>
     <header class="hero" id="top">
       <img class="hero__image" src="${imageUrl(heroPhoto.full)}" alt="鲜艳在西安的夜色里" />
       <div class="hero__shade"></div>
@@ -127,6 +146,76 @@ async function init() {
   `
 
   setupInteractions(memories)
+  setupMusicPlayer()
+}
+
+function setupMusicPlayer() {
+  const audio = document.querySelector('#love-song')
+  const player = document.querySelector('.music-player')
+  const disc = player.querySelector('.music-player__disc')
+  const toggle = player.querySelector('.music-player__toggle')
+  const mute = player.querySelector('.music-player__mute')
+  const progress = player.querySelector('.music-player__progress')
+  const status = player.querySelector('.music-player__status')
+  let seeking = false
+
+  const render = () => {
+    const playing = !audio.paused
+    player.classList.toggle('is-playing', playing)
+    disc.classList.toggle('is-spinning', playing)
+    toggle.innerHTML = icon(playing ? 'pause' : 'play')
+    toggle.setAttribute('aria-label', playing ? '暂停音乐' : '播放音乐')
+    mute.innerHTML = icon(audio.muted ? 'muted' : 'volume')
+    mute.setAttribute('aria-label', audio.muted ? '取消静音' : '静音')
+    status.textContent = playing ? '正在播放 · OUR SONG' : '轻触开启音乐'
+  }
+
+  const tryPlay = async () => {
+    try {
+      await audio.play()
+      render()
+      return true
+    } catch {
+      player.classList.add('needs-gesture')
+      render()
+      return false
+    }
+  }
+
+  // 有权限时立即有声播放；被浏览器拦截时，在第一次触摸/点击时启动。
+  tryPlay()
+  const unlock = async (event) => {
+    if (player.contains(event.target)) return
+    if (audio.paused) await tryPlay()
+    player.classList.remove('needs-gesture')
+    document.removeEventListener('pointerdown', unlock, true)
+  }
+  document.addEventListener('pointerdown', unlock, true)
+  document.addEventListener('keydown', unlock, { once: true, capture: true })
+  document.addEventListener('WeixinJSBridgeReady', tryPlay, { once: true })
+
+  toggle.addEventListener('click', async () => {
+    if (audio.paused) await tryPlay()
+    else audio.pause()
+    render()
+  })
+  mute.addEventListener('click', () => {
+    audio.muted = !audio.muted
+    render()
+  })
+  audio.addEventListener('play', () => {
+    player.classList.remove('needs-gesture')
+    render()
+  })
+  audio.addEventListener('pause', render)
+  audio.addEventListener('loadedmetadata', () => { progress.max = audio.duration || 100 })
+  audio.addEventListener('timeupdate', () => {
+    if (!seeking) progress.value = audio.currentTime
+  })
+  progress.addEventListener('pointerdown', () => { seeking = true })
+  progress.addEventListener('input', () => { audio.currentTime = Number(progress.value) })
+  progress.addEventListener('change', () => { seeking = false })
+  render()
 }
 
 function chapterTemplate(memory, index) {

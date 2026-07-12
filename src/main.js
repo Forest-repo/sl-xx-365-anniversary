@@ -15,7 +15,7 @@ const photoButton = (photo, memoryIndex, photoIndex, className = '') => `
 
 function chapterTemplate(memory, index) {
   const layout = ['chapter--spread', 'chapter--cinema', 'chapter--mosaic'][index % 3]
-  const visible = memory.photos.slice(0, 5)
+  const visible = memory.photos
   return `
     <article class="chapter ${layout} observe" data-chapter="${index}">
       <div class="chapter__media">

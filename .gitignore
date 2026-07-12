@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.DS_Store
+Thumbs.db
+*.log
+.playwright-cli/
+output/
+
+# 原始照片仅本地保留；网页使用 public/memories 下的压缩版本
+images/
+

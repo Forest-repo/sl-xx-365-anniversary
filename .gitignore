@@ -9,4 +9,4 @@ output/
 
 # 原始照片仅本地保留；网页使用 public/memories 下的压缩版本
 images/
-music/
+/music/

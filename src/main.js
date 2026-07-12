@@ -1,4 +1,5 @@
 import '@phosphor-icons/web/regular'
+import '@phosphor-icons/web/fill'
 import './style.css'
 import { calculateAnniversaryState } from './anniversary.js'
 
@@ -135,7 +136,15 @@ async function init() {
         <div class="finale__image" aria-hidden="true"></div>
         <p class="finale__kicker observe">TO BE CONTINUED</p>
         <h2 class="observe">这不是故事的结尾。<br /><em>是下一段旅程的开始。</em></h2>
-        <i class="ph ph-heart finale__heart observe" aria-hidden="true"></i>
+        <div class="finale__heart-stage observe" aria-hidden="true">
+          <span class="finale__ring finale__ring--outer"></span>
+          <span class="finale__ring finale__ring--inner"></span>
+          <i class="ph-fill ph-heart finale__heart"></i>
+          <span class="finale__particle"></span><span class="finale__particle"></span>
+          <span class="finale__particle"></span><span class="finale__particle"></span>
+          <span class="finale__particle"></span><span class="finale__particle"></span>
+          <span class="finale__particle"></span><span class="finale__particle"></span>
+        </div>
         <p class="finale__names observe">森林 <span>×</span> 鲜艳</p>
         <p class="finale__date observe">2025.07.15 至 FOREVER</p>
         <p class="finale__countdown observe" id="anniversary-message" aria-live="polite">${anniversary.message}</p>
